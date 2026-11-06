@@ -1,0 +1,55 @@
+:root {
+  --font-sans: "Manrope", sans-serif;
+  --font-mono: "Geist Mono", monospace;
+
+  --space-25: 2px;
+  --space-50: 4px;
+  --space-75: 8px;
+  --space-100: 12px;
+  --space-200: 16px;
+  --space-300: 24px;
+  --space-400: 32px;
+  --space-500: 40px;
+  --space-600: 48px;
+  --space-700: 64px;
+  --space-800: 80px;
+  --space-900: 96px;
+
+  --color-page: #000000;
+  --color-surface-1: #181818;
+  --color-surface-2: #1f1f1f;
+  --color-surface-3: #272727;
+  --color-surface-4: #313131;
+  --color-surface-warm: #131209;
+  --color-text: #ffffff;
+  --color-text-muted: #a3a3a3;
+  --color-border: #313131;
+
+  --color-brand: #9b8cff;
+  --color-brand-hover: #ad9fff;
+  --color-danger: #ef6464;
+  --color-warning: #e9b44c;
+  --color-success: #45b987;
+  --color-neutral: #929292;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-hover: 300ms;
+  --duration-motion: 500ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
