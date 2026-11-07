@@ -1,0 +1,95 @@
+:root {
+  --font-sans: "Manrope", sans-serif;
+  --font-mono: "Geist Mono", monospace;
+
+  --space-25: 2px;
+  --space-50: 4px;
+  --space-75: 8px;
+  --space-100: 12px;
+  --space-200: 16px;
+  --space-300: 24px;
+  --space-400: 32px;
+  --space-500: 40px;
+  --space-600: 48px;
+  --space-700: 64px;
+  --space-800: 80px;
+  --space-900: 96px;
+
+  --color-page: #000000;
+  --color-surface-1: #181818;
+  --color-surface-2: #1f1f1f;
+  --color-surface-3: #272727;
+  --color-surface-4: #313131;
+  --color-surface-warm: #131209;
+  --color-text: #ffffff;
+  --color-text-muted: #a3a3a3;
+  --color-border: #313131;
+
+  --color-brand: #9b8cff;
+  --color-brand-hover: #ad9fff;
+  --color-brand-ink: #0d0a24;
+  --color-danger: #ef6464;
+  --color-warning: #e9b44c;
+  --color-success: #45b987;
+  --color-neutral: #929292;
+
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  --radius-full: 999px;
+
+  --ease-standard: cubic-bezier(0.22, 1, 0.36, 1);
+  --duration-hover: 300ms;
+  --duration-motion: 500ms;
+
+  /* Type scale (size / line height) */
+  --fs-h1: 60px;
+  --lh-h1: 60px;
+  --fs-h2: 48px;
+  --lh-h2: 48px;
+  --fs-h3: 36px;
+  --lh-h3: 40px;
+  --fs-h4: 30px;
+  --lh-h4: 36px;
+  --fs-h5: 24px;
+  --lh-h5: 32px;
+  --fs-h6: 20px;
+  --lh-h6: 28px;
+  --fs-body: 16px;
+  --lh-body: 24px;
+  --fs-body-sm: 14px;
+  --lh-body-sm: 20px;
+  --fs-caption: 12px;
+  --lh-caption: 16px;
+
+  --sidebar-width: 240px;
+  --sidebar-width-compact: 72px;
+  --topbar-height: 64px;
+  --content-max: 1200px;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --fs-h1: 40px;
+    --lh-h1: 44px;
+    --fs-h2: 32px;
+    --lh-h2: 36px;
+    --fs-h3: 28px;
+    --lh-h3: 34px;
+    --fs-h4: 24px;
+    --lh-h4: 32px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
