@@ -1,9 +1,6 @@
 {
   "functions": {
-    "api/cron.py": { "maxDuration": 60 },
-    "api/telegram_webhook.py": { "maxDuration": 30 },
-    "api/gmail_oauth_callback.py": { "maxDuration": 30 },
-    "api/export.py": { "maxDuration": 30 }
+    "api/index.py": { "maxDuration": 60 }
   },
   "crons": [{ "path": "/api/cron", "schedule": "0 0 * * *" }]
 }
