@@ -264,6 +264,8 @@ def gmail_oauth_callback():
         """,
         (user_id, gmail_email, refresh_token),
     )
+    if config.FRONTEND_URL:
+        return redirect(f"{config.FRONTEND_URL.rstrip('/')}/?gmail=connected")
     return "Gmail connected. You can close this tab and return to MailPilot."
 
 

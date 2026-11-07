@@ -20,6 +20,10 @@ class Config:
 
     TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN", "")
 
+    # Where to send the user back to once Gmail is connected. Without it the callback just
+    # prints a "you can close this tab" message instead of returning to the dashboard.
+    FRONTEND_URL = os.environ.get("FRONTEND_URL", "")
+
     # Authorizes GET/POST /api/cron. Vercel sends this automatically as
     # "Authorization: Bearer <CRON_SECRET>" once set as a project env var.
     CRON_SECRET = os.environ.get("CRON_SECRET", "")

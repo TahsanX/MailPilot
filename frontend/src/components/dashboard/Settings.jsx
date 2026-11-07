@@ -43,8 +43,10 @@ export default function Settings({ user, config, flags, sampleDataAllowed, isSam
     fetchIntegrationStatus().then(setIntegrations).catch(() => {});
   }, [automationOn]);
 
+  // A full page navigation, not window.open: popup blockers silently swallow the latter, and
+  // coming back through the callback remounts Settings so the connected state is re-read.
   function handleConnectGmail() {
-    window.open(gmailConnectUrl(user.id), "_blank", "noopener,noreferrer");
+    window.location.href = gmailConnectUrl(user.id);
   }
 
   async function handleGetTelegramCode() {
