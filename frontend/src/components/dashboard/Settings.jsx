@@ -1,11 +1,18 @@
-import { useState } from "react";
-import { BookOpenText, EnvelopeSimple, FilePdf, SignOut, Trash } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { DownloadSimple, BookOpenText, EnvelopeSimple, FilePdf, PaperPlaneTilt, SignOut, Trash } from "@phosphor-icons/react";
 import Panel from "../common/Panel";
 import Button from "../common/Button";
 import Badge from "../common/Badge";
 import EmptyState from "../common/EmptyState";
 import { useToast } from "../../hooks/toastContext";
-import { clearSampleData } from "../../services/api";
+import {
+  automationConfigured,
+  clearSampleData,
+  downloadExcelReport,
+  fetchIntegrationStatus,
+  gmailConnectUrl,
+  requestTelegramLinkCode,
+} from "../../services/api";
 import { DEPARTMENTS, PROFESSIONS, RESPONSE_TONES } from "../../utils/constants";
 import { formatFileSize } from "../../utils/formatters";
 
@@ -17,14 +24,51 @@ const DOC_STATUS = {
   selected: { tone: "neutral", label: "Not yet uploaded" },
 };
 
-export default function Settings({ user, config, flags, gmailConnected, sampleDataAllowed, isSample, onDataChanged, onSignOut }) {
+export default function Settings({ user, config, flags, sampleDataAllowed, isSample, onDataChanged, onSignOut }) {
   const { notify } = useToast();
   const [clearing, setClearing] = useState(false);
+  const [integrations, setIntegrations] = useState(null);
+  const [telegramCode, setTelegramCode] = useState(null);
+  const [requestingCode, setRequestingCode] = useState(false);
+  const [exporting, setExporting] = useState(false);
+  const automationOn = automationConfigured();
   const kb = config.knowledgeBase;
   const profession = PROFESSIONS.find((p) => p.value === config.profession)?.label ?? "—";
   const faqs = kb.faqs.filter((f) => f.question.trim() && f.answer.trim());
   const hasKb = faqs.length > 0 || kb.documents.length > 0 || kb.companyOverview.trim() || kb.companyName.trim();
   const tone = RESPONSE_TONES.find((t) => t.value === config.customerCarePreferences.responseTone)?.label;
+
+  useEffect(() => {
+    if (!automationOn) return;
+    fetchIntegrationStatus().then(setIntegrations).catch(() => {});
+  }, [automationOn]);
+
+  function handleConnectGmail() {
+    window.open(gmailConnectUrl(user.id), "_blank", "noopener,noreferrer");
+  }
+
+  async function handleGetTelegramCode() {
+    setRequestingCode(true);
+    try {
+      const { code } = await requestTelegramLinkCode();
+      setTelegramCode(code);
+    } catch (err) {
+      notify(err.message || "Could not generate a code.", "error");
+    } finally {
+      setRequestingCode(false);
+    }
+  }
+
+  async function handleExport() {
+    setExporting(true);
+    try {
+      await downloadExcelReport();
+    } catch (err) {
+      notify(err.message || "Could not generate the report.", "error");
+    } finally {
+      setExporting(false);
+    }
+  }
 
   async function handleClearSample() {
     setClearing(true);
@@ -96,15 +140,63 @@ export default function Settings({ user, config, flags, gmailConnected, sampleDa
         )}
       </Panel>
 
-      <Panel title="Integrations" subtitle="Connections run through Make.com scenarios.">
-        <div className="integration">
-          <EnvelopeSimple size={24} aria-hidden="true" />
-          <div>
-            <p className="integration__name">Gmail</p>
-            <p className="muted">{gmailConnected ? "Connected" : "Not connected. This changes only after your Make.com scenario confirms the connection."}</p>
+      <Panel title="Integrations" subtitle="Connect Gmail so the automation service can read and draft mail, and Telegram for urgent alerts.">
+        {!automationOn ? (
+          <EmptyState icon={EnvelopeSimple} title="Automation service not configured">
+            Set VITE_AUTOMATION_URL to enable Gmail, Telegram and Excel export.
+          </EmptyState>
+        ) : (
+          <div className="stack">
+            <div className="integration">
+              <EnvelopeSimple size={24} aria-hidden="true" />
+              <div>
+                <p className="integration__name">Gmail</p>
+                <p className="muted">
+                  {integrations?.gmailConnected ? `Connected as ${integrations.gmailEmail}` : "Lets the assistant read and draft replies in your inbox."}
+                </p>
+              </div>
+              {integrations?.gmailConnected ? (
+                <Badge tone="success">Connected</Badge>
+              ) : (
+                <Button variant="secondary" size="sm" onClick={handleConnectGmail}>
+                  Connect
+                </Button>
+              )}
+            </div>
+
+            <div className="integration">
+              <PaperPlaneTilt size={24} aria-hidden="true" />
+              <div>
+                <p className="integration__name">Telegram</p>
+                <p className="muted">
+                  {integrations?.telegramConnected
+                    ? "Connected. Urgent emails are sent here."
+                    : telegramCode
+                      ? `Send "/start ${telegramCode}" to the bot within 10 minutes.`
+                      : "Get urgent email alerts in a chat."}
+                </p>
+              </div>
+              {integrations?.telegramConnected ? (
+                <Badge tone="success">Connected</Badge>
+              ) : (
+                <Button variant="secondary" size="sm" loading={requestingCode} onClick={handleGetTelegramCode}>
+                  {telegramCode ? "Get a new code" : "Get a code"}
+                </Button>
+              )}
+            </div>
+
+            <div className="integration">
+              <DownloadSimple size={24} aria-hidden="true" />
+              <div>
+                <p className="integration__name">Excel report</p>
+                <p className="muted">Download all processed emails and candidates as a spreadsheet.</p>
+              </div>
+              <Button variant="secondary" size="sm" loading={exporting} onClick={handleExport}>
+                Download
+              </Button>
+            </div>
           </div>
-          <Badge tone={gmailConnected ? "success" : "neutral"}>{gmailConnected ? "Connected" : "Not connected"}</Badge>
-        </div>
+        )}
       </Panel>
 
       {sampleDataAllowed && (

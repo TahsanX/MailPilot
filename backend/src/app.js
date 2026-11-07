@@ -6,6 +6,7 @@ import { errorHandler, notFoundHandler } from "./middleware/error.js";
 import { authRouter } from "./routes/auth.js";
 import { cronRouter } from "./routes/cron.js";
 import { dashboardRouter } from "./routes/dashboard.js";
+import { integrationsRouter } from "./routes/integrations.js";
 import { profileRouter } from "./routes/profile.js";
 import { webhookRouter } from "./routes/webhooks.js";
 
@@ -33,6 +34,7 @@ export function createApp() {
   app.use("/api/auth", authRouter);
   app.use("/api/profile", profileRouter);
   app.use("/api/dashboard", dashboardRouter);
+  app.use("/api/integrations", integrationsRouter);
   app.use("/api/webhooks", webhookRouter);
   app.use("/api/cron", cronRouter);
 

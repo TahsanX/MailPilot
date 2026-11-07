@@ -3,6 +3,7 @@
  * The backend (not this file) is what talks to Make.com and Gemini.
  */
 const API_BASE = (import.meta.env.VITE_API_URL ?? "http://localhost:4000/api").replace(/\/$/, "");
+const AUTOMATION_BASE = (import.meta.env.VITE_AUTOMATION_URL ?? "").replace(/\/$/, "");
 const TIMEOUT_MS = 20_000;
 const TOKEN_KEY = "mailpilot.token";
 
@@ -130,6 +131,41 @@ export const fetchCustomerCareStats = ({ range = "30d" } = {}) => request("/dash
 export const loadSampleData = () => request("/dashboard/sample-data", { method: "POST", body: {} });
 
 export const clearSampleData = () => request("/dashboard/sample-data", { method: "DELETE" });
+
+/* ------------------------------------------------------------ integrations */
+
+export const automationConfigured = () => Boolean(AUTOMATION_BASE);
+
+export const fetchIntegrationStatus = () => request("/integrations/status");
+
+export const requestTelegramLinkCode = () => request("/integrations/telegram/link-code", { method: "POST", body: {} });
+
+/** Opens Google's consent screen in a new tab. The automation service redirects back there, not here. */
+export function gmailConnectUrl(userId) {
+  return `${AUTOMATION_BASE}/api/gmail_oauth_start?userId=${encodeURIComponent(userId)}`;
+}
+
+/**
+ * The export endpoint lives on the automation service and needs the same bearer token, so it
+ * can't just be an <a href>: the file is fetched here and handed to the browser as a blob download.
+ */
+export async function downloadExcelReport() {
+  const token = getToken();
+  const res = await fetch(`${AUTOMATION_BASE}/api/export`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) throw new ServiceError("Could not generate the report. Try again.");
+
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "mailpilot-report.xlsx";
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
 
 /**
  * Converts the backend's profile shape (documents carry a Gemini summary status) into the shape

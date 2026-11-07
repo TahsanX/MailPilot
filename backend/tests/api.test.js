@@ -40,7 +40,7 @@ before(async () => {
   };
 
   ({ pool } = await import("../src/db.js"));
-  for (const file of ["001_schema.sql", "002_dashboard.sql", "003_cron_queue.sql"]) {
+  for (const file of ["001_schema.sql", "002_dashboard.sql", "003_cron_queue.sql", "004_automation.sql"]) {
     const sql = readFileSync(new URL(`../sql/${file}`, import.meta.url), "utf8");
     await pool.query(sql);
     // Idempotent: applying twice must not fail.
@@ -391,6 +391,59 @@ describe("make webhook auth", () => {
 
     const check = await pool.query("select gmail_connected from users where id = $1", [rows[0].id]);
     assert.equal(check.rows[0].gmail_connected, true);
+  });
+});
+
+describe("integrations", () => {
+  let token;
+
+  test("setup: log in", async () => {
+    const res = await json("POST", "/auth/login", { email: "rafi@example.com", password: "NewPassw0rd" });
+    assert.equal(res.status, 200, JSON.stringify(res.body));
+    token = res.body.token;
+  });
+
+  test("status is unconnected before the automation service writes anything", async () => {
+    const res = await json("GET", "/integrations/status", null, token);
+    assert.equal(res.status, 200);
+    assert.deepEqual(res.body, { gmailConnected: false, gmailEmail: null, telegramConnected: false });
+  });
+
+  test("a telegram link code is six digits and expires in 10 minutes", async () => {
+    const res = await json("POST", "/integrations/telegram/link-code", {}, token);
+    assert.equal(res.status, 200);
+    assert.match(res.body.code, /^\d{6}$/);
+    assert.equal(res.body.expiresInMinutes, 10);
+
+    const row = await pool.query("select expires_at from telegram_link_codes where code = $1", [res.body.code]);
+    assert.equal(row.rowCount, 1);
+  });
+
+  test("requesting a new code replaces the old one", async () => {
+    const first = await json("POST", "/integrations/telegram/link-code", {}, token);
+    const second = await json("POST", "/integrations/telegram/link-code", {}, token);
+    const row = await pool.query("select code from telegram_link_codes where code = $1", [first.body.code]);
+    assert.equal(row.rowCount, 0, "the first code should no longer exist");
+    const row2 = await pool.query("select code from telegram_link_codes where code = $1", [second.body.code]);
+    assert.equal(row2.rowCount, 1);
+  });
+
+  test("status reflects what the automation service would write", async () => {
+    const { rows } = await pool.query("select id from users where email = 'rafi@example.com'");
+    await pool.query(
+      `insert into integrations (user_id, gmail_email, gmail_refresh_token, telegram_chat_id)
+       values ($1, 'rafi@gmail.com', 'refresh-token-123', '555')
+       on conflict (user_id) do update set gmail_email = excluded.gmail_email,
+         gmail_refresh_token = excluded.gmail_refresh_token, telegram_chat_id = excluded.telegram_chat_id`,
+      [rows[0].id],
+    );
+
+    const res = await json("GET", "/integrations/status", null, token);
+    assert.deepEqual(res.body, { gmailConnected: true, gmailEmail: "rafi@gmail.com", telegramConnected: true });
+  });
+
+  test("protected routes need a valid token", async () => {
+    assert.equal((await json("GET", "/integrations/status")).status, 401);
   });
 });
 

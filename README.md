@@ -1,16 +1,33 @@
-# React + Vite
+# MailPilot
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+AI email assistant. Reads Gmail, classifies and drafts replies, tracks HR/Customer Care
+pipelines, and shows everything in a dashboard. Three independent projects, one Supabase
+database:
 
-Currently, two official plugins are available:
+| Folder | What it is | Runtime |
+|---|---|---|
+| [`frontend/`](frontend) | React + Vite dashboard and onboarding | Node (static build) |
+| [`backend/`](backend) | Auth, dashboard data, PDF summaries, cron queue | Node/Express |
+| [`automation/`](automation) | Gmail/Telegram/Excel automation (LangGraph + LangChain + Gemini) | Python/Flask |
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Each has its own `README.md` with setup, env vars and deployment notes. All three read/write the
+same Supabase Postgres database (`backend/sql/*.sql` holds every migration, applied once from
+`backend/`).
 
-## React Compiler
+## Deploying
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+All three deploy from this one GitHub repo as **three separate Vercel projects** under the same
+Vercel account - that's expected and the right setup, not a workaround:
 
-## Expanding the ESLint configuration
+1. **New Project → Import this repo**, three times, each with a different **Root Directory**:
+   `frontend`, `backend`, `automation`.
+2. Set each project's own env vars (see that folder's `.env.example`) in Vercel's dashboard -
+   `.env` files are never read in production.
+3. `backend` and `automation` both need the same Supabase `DATABASE_URL` (the connection pooler
+   URI, not the direct host - see `backend/README.md`).
+4. `frontend`'s `VITE_API_URL` points at the deployed `backend` URL, and `VITE_AUTOMATION_URL`
+   at the deployed `automation` URL.
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+They can't be merged into one Vercel project: `backend` is a long-lived-style Node/Express app
+served through a single serverless function, `automation` is a set of independent Python
+functions, and `frontend` is a static build - different builders, different runtimes.
