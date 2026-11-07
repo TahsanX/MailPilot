@@ -42,3 +42,9 @@ export function createApp() {
   app.use(errorHandler);
   return app;
 }
+
+// Vercel's "Express" framework preset auto-detects this file as the entrypoint and requires a
+// default export that is a function (an Express app qualifies, since it's callable) - it does not
+// use api/index.js's export in that mode. createApp() stays a named export too, since tests need
+// a fresh instance per run rather than this one shared module-load-time instance.
+export default createApp();
